@@ -1,5 +1,7 @@
 package net.peterv.registry.application.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import net.peterv.common.events.DomainEvent;
 import net.peterv.common.events.FunctionDeleted;
 import net.peterv.common.ports.EventPublisher;
@@ -18,12 +20,14 @@ import net.peterv.registry.domain.repository.FunctionRepository;
 
 import java.util.List;
 
+@ApplicationScoped
 public class FunctionRegistryService {
 
     private final FunctionRepository repository;
     private final ModuleStoreWritePort moduleStore;
     private final EventPublisher eventPublisher;
 
+    @Inject
     public FunctionRegistryService(
             FunctionRepository repository,
             ModuleStoreWritePort moduleStore,
