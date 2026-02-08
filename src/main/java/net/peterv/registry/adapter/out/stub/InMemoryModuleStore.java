@@ -8,6 +8,7 @@ import net.peterv.registry.application.port.ModuleStoreWritePort;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @DefaultBean
@@ -21,6 +22,10 @@ public class InMemoryModuleStore implements ModuleStoreWritePort {
         String hash = sha256(wasmBytes);
         store.put(hash, wasmBytes);
         return new ModuleReference(hash);
+    }
+
+    public Optional<byte[]> fetch(ModuleReference ref) {
+        return Optional.ofNullable(store.get(ref.contentHash()));
     }
 
     private static String sha256(byte[] data) {

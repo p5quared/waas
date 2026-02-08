@@ -14,42 +14,42 @@ import java.util.concurrent.ConcurrentHashMap;
 @ApplicationScoped
 public class InMemoryFunctionRepository implements FunctionRepository {
 
-    private final ConcurrentHashMap<String, Function> store = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Function> store = new ConcurrentHashMap<>();
 
-    @Override
-    public void save(Function function) {
-        store.put(function.id().value(), function);
-    }
+	@Override
+	public void save(Function function) {
+		store.put(function.id().value(), function);
+	}
 
-    @Override
-    public Optional<Function> findById(FunctionId id) {
-        return Optional.ofNullable(store.get(id.value()));
-    }
+	@Override
+	public Optional<Function> findById(FunctionId id) {
+		return Optional.ofNullable(store.get(id.value()));
+	}
 
-    @Override
-    public Optional<Function> findByName(String name) {
-        return store.values().stream()
-                .filter(f -> f.name().equals(name))
-                .findFirst();
-    }
+	@Override
+	public Optional<Function> findByName(String name) {
+		return store.values().stream()
+				.filter(f -> f.name().equals(name))
+				.findFirst();
+	}
 
-    @Override
-    public boolean existsByName(String name) {
-        return store.values().stream()
-                .anyMatch(f -> f.name().equals(name));
-    }
+	@Override
+	public boolean existsByName(String name) {
+		return store.values().stream()
+				.anyMatch(f -> f.name().equals(name));
+	}
 
-    @Override
-    public void delete(FunctionId id) {
-        store.remove(id.value());
-    }
+	@Override
+	public void delete(FunctionId id) {
+		store.remove(id.value());
+	}
 
-    @Override
-    public List<Function> listAll() {
-        return List.copyOf(store.values());
-    }
+	@Override
+	public List<Function> listAll() {
+		return List.copyOf(store.values());
+	}
 
-    public void clear() {
-        store.clear();
-    }
+	public void clear() {
+		store.clear();
+	}
 }
