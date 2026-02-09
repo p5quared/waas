@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>waas - WebAssembly as a Service</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #fffbe6;
+      color: #000;
+      line-height: 1.5;
+    }
+
+    header {
+      background: #3344ff;
+      color: #fff;
+      padding: 1.25rem 2rem;
+      border-bottom: 3px solid #000;
+    }
+
+    header h1 { font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+    header h1 span { color: #a6ff00; }
+
+    main {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      main {
+        max-width: 1200px;
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+    }
+
+    .card {
+      background: #fff;
+      border: 3px solid #000;
+      border-radius: 0;
+      box-shadow: 6px 6px 0 #000;
+      padding: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      padding-bottom: 0;
+      border-bottom: none;
+      display: inline-block;
+      background: #e0d4ff;
+      padding: .15rem .5rem;
+      border: 2px solid #000;
+    }
+
+    .card-note {
+      margin: 0 0 1rem;
+      padding: .6rem .75rem;
+      font-size: .85rem;
+      font-weight: 700;
+      background: #ffd86b;
+      border: 2px solid #000;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .format-note {
+      margin: 0 0 1rem;
+      padding: .6rem .75rem;
+      font-size: .82rem;
+      font-weight: 700;
+      line-height: 1.45;
+      background: #d9f9ff;
+      border: 2px solid #000;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .format-note code {
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      font-size: .8rem;
+      font-weight: 700;
+      background: #fff;
+      border: 1px solid #000;
+      padding: 0 .2rem;
+    }
+
+    .hidden { display: none !important; }
+
+    .premade-description {
+      margin-top: .5rem;
+      padding: .45rem .55rem;
+      font-size: .82rem;
+      font-weight: 600;
+      background: #d9f9ff;
+      border: 2px solid #000;
+    }
+
+    .premade-download {
+      display: inline-block;
+      margin-top: .5rem;
+      padding: .3rem .55rem;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #000;
+      background: #fff;
+      border: 2px solid #000;
+      text-decoration: none;
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    .premade-download:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #000;
+    }
+
+    label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      margin-bottom: .25rem;
+      color: #000;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    textarea,
+    select {
+      width: 100%;
+      padding: .5rem;
+      border: 2px solid #000;
+      border-radius: 0;
+      font-size: .9rem;
+      font-family: inherit;
+      background: #fff;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #000;
+      box-shadow: 3px 3px 0 #7c83ff;
+    }
+
+    .form-group { margin-bottom: .75rem; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+
+    details {
+      margin-bottom: .75rem;
+    }
+
+    details summary {
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: .5rem;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    button {
+      padding: .5rem 1.25rem;
+      border: 2px solid #000;
+      border-radius: 0;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 4px 4px 0 #000;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #a6ff00;
+      color: #000;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: #000;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+    }
+
+    .feedback {
+      margin-top: .75rem;
+      padding: .5rem .75rem;
+      border-radius: 0;
+      font-size: .85rem;
+      font-weight: 600;
+      display: none;
+      border: 2px solid #000;
+    }
+
+    .feedback.success {
+      display: block;
+      background: #d4ffb0;
+      color: #1a5c00;
+      border-left: 6px solid #2e7d32;
+    }
+
+    .feedback.error {
+      display: block;
+      background: #ffe0e0;
+      color: #900;
+      border-left: 6px solid #c62828;
+    }
+
+    .invoke-row {
+      display: flex;
+      gap: .5rem;
+      align-items: flex-end;
+    }
+
+    .invoke-row .form-group { flex: 1; margin-bottom: 0; }
+
+    .output-area {
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .output-area.visible { display: block; }
+
+    .output-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: .8rem;
+      color: #000;
+      margin-bottom: .5rem;
+    }
+
+    .output-meta span {
+      font-weight: 800;
+      color: #000;
+      background: #ffd6e0;
+      padding: .1rem .4rem;
+      border: 1px solid #000;
+    }
+
+    .output-content {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 1rem;
+      border: 3px solid #000;
+      border-radius: 0;
+      box-shadow: 4px 4px 0 #000;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      font-size: .85rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 2rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span>waas</span> &mdash; WebAssembly as a Service</h1>
+  </header>
+
+  <main>
+    <!-- Create Function -->
+    <div class="card">
+      <h2>Create Function</h2>
+      <p class="card-note">Note: Assume functions created here are ephemeral.</p>
+      <p class="format-note">
+        WASM I/O interface:
+        Handler receives invoke payloads via Stdin as bytes and output is read from Stdout.
+      </p>
+      <form id="create-form">
+        <div class="form-group">
+          <label for="fn-name">Name</label>
+          <input type="text" id="fn-name" required placeholder="my-function">
+        </div>
+        <div class="form-group">
+          <label for="fn-desc">Description</label>
+          <input type="text" id="fn-desc" placeholder="Optional description">
+        </div>
+        <div class="form-group">
+          <label for="fn-source-mode">WASM Source</label>
+          <select id="fn-source-mode">
+            <option value="upload">Upload file</option>
+            <option value="premade">Premade binary</option>
+          </select>
+        </div>
+        <div class="form-group" id="fn-upload-group">
+          <label for="fn-wasm">WASM Binary</label>
+          <input type="file" id="fn-wasm" accept=".wasm" required>
+        </div>
+        <div class="form-group hidden" id="fn-premade-group">
+          <label for="fn-premade">Premade WASM</label>
+          <select id="fn-premade"></select>
+          <div class="premade-description" id="fn-premade-desc"></div>
+          <a class="premade-download" id="fn-premade-link" href="#" download>Download selected binary</a>
+        </div>
+        <details>
+          <summary>Resource limits (optional)</summary>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fn-timeout">Timeout (seconds)</label>
+              <input type="number" id="fn-timeout" min="1" value="30">
+            </div>
+            <div class="form-group">
+              <label for="fn-memory">Memory limit (MB)</label>
+              <input type="number" id="fn-memory" min="1" value="64">
+            </div>
+          </div>
+        </details>
+        <button type="submit" class="btn-primary" id="create-btn">Create</button>
+        <div class="feedback" id="create-feedback"></div>
+      </form>
+    </div>
+
+    <!-- Invoke Function -->
+    <div class="card">
+      <h2>Invoke Function</h2>
+      <div class="invoke-row">
+        <div class="form-group">
+          <label for="fn-select">Function</label>
+          <select id="fn-select">
+            <option value="">-- select a function --</option>
+          </select>
+        </div>
+        <button type="button" class="btn-secondary" id="refresh-btn" title="Refresh function list">Refresh</button>
+      </div>
+      <div class="form-group" style="margin-top:.75rem">
+        <label for="fn-stdin">Stdin</label>
+        <textarea id="fn-stdin" rows="3" placeholder="Optional input to pass as stdin"></textarea>
+      </div>
+      <button type="button" class="btn-primary" id="invoke-btn" disabled>Invoke</button>
+      <div class="feedback" id="invoke-feedback"></div>
+
+      <div class="output-area" id="output-area">
+        <div class="output-meta">
+          <div>Exit code: <span id="out-exit">—</span></div>
+          <div>Execution time (cold start): <span id="out-time">—</span></div>
+        </div>
+        <div class="output-content" id="out-stdout"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API = '/api/v1/functions';
+    const INVOKE = '/invoke';
+    const PREMADE_WASM = [
+      {
+        id: 'stdecho',
+        name: 'stdecho.wasm',
+        description: 'Echoes stdin back to stdout and has some IO checks.',
+        url: '/wasm/stdecho.wasm'
+      }
+    ];
+
+    const $ = (sel) => document.querySelector(sel);
+
+    // --- helpers ---
+
+    function showFeedback(el, msg, ok) {
+      el.textContent = msg;
+      el.className = 'feedback ' + (ok ? 'success' : 'error');
+    }
+
+    function clearFeedback(el) {
+      el.textContent = '';
+      el.className = 'feedback';
+    }
+
+    function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(new Uint8Array(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function uint8ToBase64(bytes) {
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    async function fetchWasmBytes(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Failed to download premade WASM (${res.status})`);
+      return new Uint8Array(await res.arrayBuffer());
+    }
+
+    function selectedPremade() {
+      const id = $('#fn-premade').value;
+      return PREMADE_WASM.find((item) => item.id === id) ?? null;
+    }
+
+    function populatePremadeOptions() {
+      const select = $('#fn-premade');
+      select.innerHTML = '';
+      for (const item of PREMADE_WASM) {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.name;
+        select.appendChild(opt);
+      }
+    }
+
+    function renderPremadeDetails() {
+      const item = selectedPremade();
+      if (!item) return;
+      $('#fn-premade-desc').textContent = item.description;
+      const link = $('#fn-premade-link');
+      link.href = item.url;
+      link.setAttribute('download', item.name);
+    }
+
+    function updateSourceMode() {
+      const mode = $('#fn-source-mode').value;
+      const uploadGroup = $('#fn-upload-group');
+      const premadeGroup = $('#fn-premade-group');
+      const fileInput = $('#fn-wasm');
+      const premadeSelect = $('#fn-premade');
+
+      if (mode === 'premade') {
+        uploadGroup.classList.add('hidden');
+        premadeGroup.classList.remove('hidden');
+        fileInput.required = false;
+        premadeSelect.required = true;
+      } else {
+        uploadGroup.classList.remove('hidden');
+        premadeGroup.classList.add('hidden');
+        fileInput.required = true;
+        premadeSelect.required = false;
+      }
+    }
+
+    // --- load function list ---
+
+    async function loadFunctions() {
+      const select = $('#fn-select');
+      try {
+        const res = await fetch(API);
+        if (!res.ok) throw new Error('Failed to load functions');
+        const fns = await res.json();
+        select.innerHTML = '<option value="">-- select a function --</option>';
+        for (const fn of fns) {
+          const opt = document.createElement('option');
+          opt.value = fn.id;
+          opt.textContent = fn.name;
+          select.appendChild(opt);
+        }
+      } catch (e) {
+        select.innerHTML = '<option value="">Error loading functions</option>';
+      }
+      updateInvokeBtn();
+    }
+
+    function updateInvokeBtn() {
+      $('#invoke-btn').disabled = !$('#fn-select').value;
+    }
+
+    $('#fn-select').addEventListener('change', updateInvokeBtn);
+    $('#refresh-btn').addEventListener('click', loadFunctions);
+    $('#fn-source-mode').addEventListener('change', updateSourceMode);
+    $('#fn-premade').addEventListener('change', renderPremadeDetails);
+
+    // --- create function ---
+
+    $('#create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fb = $('#create-feedback');
+      clearFeedback(fb);
+
+      const name = $('#fn-name').value.trim();
+      if (!name) return;
+
+      const btn = $('#create-btn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      try {
+        const mode = $('#fn-source-mode').value;
+        let bytes;
+        if (mode === 'premade') {
+          const item = selectedPremade();
+          if (!item) throw new Error('Select a premade WASM binary');
+          bytes = await fetchWasmBytes(item.url);
+        } else {
+          const file = $('#fn-wasm').files[0];
+          if (!file) throw new Error('Select a WASM file to upload');
+          bytes = await readFileAsArrayBuffer(file);
+        }
+
+        const body = {
+          name,
+          description: $('#fn-desc').value.trim() || null,
+          wasmBytes: uint8ToBase64(bytes),
+          resourceLimits: {
+            timeoutSeconds: parseInt($('#fn-timeout').value, 10) || 30,
+            memoryLimitBytes: (parseInt($('#fn-memory').value, 10) || 64) * 1024 * 1024
+          }
+        };
+
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+
+        const created = await res.json();
+        showFeedback(fb, `Function "${created.name}" created (${created.id})`, true);
+        $('#create-form').reset();
+        updateSourceMode();
+        renderPremadeDetails();
+        loadFunctions();
+      } catch (err) {
+        showFeedback(fb, err.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create';
+      }
+    });
+
+    // --- invoke function ---
+
+    $('#invoke-btn').addEventListener('click', async () => {
+      const fnId = $('#fn-select').value;
+      if (!fnId) return;
+
+      const fb = $('#invoke-feedback');
+      clearFeedback(fb);
+
+      const btn = $('#invoke-btn');
+      btn.disabled = true;
+      btn.textContent = 'Invoking...';
+
+      const outputArea = $('#output-area');
+      outputArea.className = 'output-area';
+
+      try {
+        const stdinText = $('#fn-stdin').value;
+        const stdinBytes = new TextEncoder().encode(stdinText);
+
+        const res = await fetch(`${INVOKE}/${fnId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/octet-stream' },
+          body: stdinBytes
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+
+        const exitCode = res.headers.get('X-Exit-Code') ?? '—';
+        const execTime = res.headers.get('X-Execution-Time-Ms');
+        const stdout = await res.text();
+
+        $('#out-exit').textContent = exitCode;
+        $('#out-time').textContent = execTime != null ? `${execTime} ms` : '—';
+        $('#out-stdout').textContent = stdout || '(no output)';
+        outputArea.className = 'output-area visible';
+      } catch (err) {
+        showFeedback(fb, err.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Invoke';
+        updateInvokeBtn();
+      }
+    });
+
+    // --- init ---
+    populatePremadeOptions();
+    updateSourceMode();
+    renderPremadeDetails();
+    loadFunctions();
+  </script>
+</body>
+</html>
