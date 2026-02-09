@@ -8,7 +8,7 @@
 
     <properties>
         <compiler-plugin.version>3.14.1</compiler-plugin.version>
-        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
@@ -33,15 +33,7 @@
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-panache</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -56,10 +48,6 @@
             <groupId>com.dylibso.chicory</groupId>
             <artifactId>wasi</artifactId>
             <version>1.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
